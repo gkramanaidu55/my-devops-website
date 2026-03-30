@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-upload:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,8 +24,15 @@ jobs:
       - name: Build React project
         run: npm run build
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-build-artifact
-          path: build/
+      - name: Create zip of build folder
+        run: zip -r react-build.zip build
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
+          JF_ACCESS_TOKEN: ${{ secrets.JF_ACCESS_TOKEN }}
+
+      - name: Upload artifact to JFrog
+        run: |
+          jf rt u "react-build.zip" "${{ secrets.JF_REPO }}/"
